@@ -1,8 +1,12 @@
 ;
-SALLYBUILD	EQU	1
+SALLYBUILD	EQU	0
 ;
 ;
+IF SALLYBUILD
 		ORG	05A8h
+ELSE
+		ORG	00B9h
+ENDIF
 ;
 		INCLUDE equs.mac
 ;
@@ -38,8 +42,11 @@ RESTART:
 	INCLUDE	minimon.mac
 	INCLUDE	printer.mac
 	DEFB 95h                ; **** Exists on original ROM? ****
+IF SALLYBUILD
 		dw	0, 0, 0, 0, 0, 0
-;	defs	(($ and 0ff00h)+100h)-$
+ELSE
+	defs	(($ and 0ff00h)+100h)-$
+ENDIF
 	INCLUDE	serial.mac
 ;	
 ;		CODE PAST THIS POINT IS ONLY USED IN ATARI DISK MODE
@@ -60,6 +67,8 @@ CTCVEC	equ	ram+16	;8 word interrupt vector table
 		INCLUDE global.mac
 ;
 		.DEPHASE
+
+IF SALLYBUILD
 ;
 ;--------------------------------------------------
 ; set to zero in startup code until 0ffffh
@@ -75,14 +84,16 @@ CTCVEC	equ	ram+16	;8 word interrupt vector table
 		NOP
 		NOP
 		NOP
-;
-;LAST	EQU	$
-;	IF ($+16) GT (1000H)
-;		.ERROR /4K ROM BOUNDARY CROSSED/
-;	ELSE
-;		DEFS (1000H-16)-LAST
 		DB  'ROLLI 1 Rev 1.00'
-;	ENDIF
+ELSE
+LAST	EQU	$
+	IF ($+16) GT (1000H)
+		.ERROR /4K ROM BOUNDARY CROSSED/
+	ELSE
+		DEFS (1000H-16)-LAST
+		DB  'ATR8000 ver 3.02'
+	ENDIF
+ENDIF
 ;
 ;
 ;
@@ -103,7 +114,6 @@ SIOFAST		EQU	8
 
 reset:		DI							;disable interrupt
 			XOR		A					;set a to zero
-;			LD		B, A
 restime:	DEC		A					;do 256 times nothing
 			JR		NZ, restime			;loop
 
@@ -113,7 +123,10 @@ portinit:	LD		C, (HL)
 			INC     HL
 			OUTI
 			JR		NZ, portinit		; loop
-
+;
+;
+;	PERFORM READ/WRITE TEST OF TOP 4K RAM
+;
 			LD		HL,MONITOR			;test ram @F000-FFFF
 			LD		A, 01h				;write 1,2,4,8,16,32,64,128
 testram2:	LD		B, 10h
@@ -127,14 +140,16 @@ testram:	LD		(HL), A
 			LD		C, 10h
 testram1:	DEC     HL
 			RRCA
-			CP		(HL)
+			CP		(HL)				;VERIFY THAT TEST PATTERN IS WRITTEN
 ramerr:		JR		NZ, ramerr			;if error, loop forever
 			DJNZ    testram1
 			DEC		C
 			JR		NZ, testram1
 			ADD     A, A
-			JR		NZ, testram2
-
+			JR		NZ, testram2		;DO 8 PASSES OVER MEMORY
+;
+;	NOW COPY MONITOR AND VARIABLES TO HIGH RAM
+;
 			LD		HL, MONCOPY			;copy BIOS 0f000h
 			LD		DE, MONITOR
 			LD		BC, MONSIZE			;length always 0f00h?
@@ -169,7 +184,11 @@ ramfill:	LD		(DE), A
 			LD		B, 5				;step 5 times
 stepinloop:
 			LD		A, STEPIN+NOWAITMTR+STEPRATE		;4b: 4 = step-in, b = NOWAITMTR+STEPRATE3
+IF SALLYBUILD
 			CALL    slyCMDOUT			;write A to FDC command and wait
+ELSE
+			CALL    TYP1CMD				;write A to FDC command and wait
+ENDIF
 			DJNZ    stepinloop
 
 			LD		B, 64h				;seek track 00 for all 4 drives - DO 100 STEPS TOWARD TRACK ZERO to support 100 track drives
@@ -178,7 +197,11 @@ outloop1:	LD		A, D				;select all drives
 			EX		(SP),HL				;Use this benign operation pair
 			EX		(SP),HL				;to wait 38 T-states
 			LD		A, STEPOUT+NOWAITMTR+STEPRATE		;6b: 6 = step-out, b = NOWAITMTR+STEPRATE3
+IF SALLYBUILD
 			CALL    slyCMDOUT			;write A to FDC command and wait
+ELSE
+			CALL    TYP1CMD				;write A to FDC command and wait
+ENDIF
 
 			LD		E, DRVSEL1			;PREPARE TO TEST TK0 INDICATORS
 outloop:	LD		A, E
@@ -394,6 +417,8 @@ code0000:
 		ENDIF
 
 			JP		EMULATOR			;GO INITIALIZE FOR ATARI OR CP/M
+
+IF SALLYBUILD
 
 logonfn:	LD		(RWMAX),A			;DO LESS RETRIES IN ATARI MODE
 
@@ -1182,6 +1207,7 @@ CMDT3:		IN		A, (STSREG)
 			BIT		0, A
 			JR		NZ, slyCMDT1
 			RET
+		ENDIF		; SALLYBUILD
 
 ;--------------------------------------------------
 ; 11 times port:value
@@ -1195,10 +1221,17 @@ portval:	DB	ATROUT, 001h			;Bit0	set ATARI DATA TO MARK STATE
 			DB	CTC2, 003h				;CTC	Channel 2 reset
 			DB	CTC3, 003h				;CTC	Channel 3 reset
 			DB	CDMUX, 001h				;Bit7	ATARI RXD - SET MUX TO PASS ATARI DATA
+IF SALLYBUILD
 			DB	LATCH, 050h				;DRIVE CONTROL reset FDC
 			DB	LATCH, 040h				;DRIVE CONTROL 8Mhz
+ELSE
+			DEFB	LATCH,00000000B		;ZEROS TO DRIVE SELECT LATCH
+			DEFB	CMDREG,FINCMD		;FORCE DISK CONTROLLER INTERRUPT
+ENDIF
 portlen	EQU	$-portval
 
+
+IF SALLYBUILD
 ;--------------------------------------------------
 ; variables and data structure
 ;--------------------------------------------------
@@ -1237,4 +1270,6 @@ dcb:		DB	0						;DISK OPERATION CODE
 			DB	0						;OPERATION COMPLETION STATUS
 
 id:			DW	0, 0, 0
+
+ENDIF
 
