@@ -1,5 +1,5 @@
 ;
-SALLYBUILD	EQU	0
+SALLYBUILD	EQU	1
 ;
 ;
 IF SALLYBUILD
@@ -8,7 +8,7 @@ ELSE
 		ORG	00B9h
 ENDIF
 ;
-		INCLUDE equs.mac
+		INCLUDE EQUS.MAC
 ;
 ;
 ;
@@ -38,22 +38,22 @@ RESTART:
 ;	
 ;	
 ;	
-	INCLUDE	diskio.mac
-	INCLUDE	minimon.mac
-	INCLUDE	printer.mac
+	INCLUDE	DISKIO.MAC
+	INCLUDE	MINIMON.MAC
+	INCLUDE	PRINTER.MAC
 	DEFB 95h                ; **** Exists on original ROM? ****
 IF SALLYBUILD
 		dw	0, 0, 0, 0, 0, 0
 ELSE
 	defs	(($ and 0ff00h)+100h)-$
 ENDIF
-	INCLUDE	serial.mac
+	INCLUDE	SERIAL.MAC
 ;	
 ;		CODE PAST THIS POINT IS ONLY USED IN ATARI DISK MODE
 ;	
-	INCLUDE	bitbang.mac
-	INCLUDE	atari.mac
-	INCLUDE	format.mac
+	INCLUDE	BITBANG.MAC
+	INCLUDE	ATARI.MAC
+	INCLUDE	FORMAT.MAC
 ;
 	.DEPHASE
 MONSIZE	EQU	$-MONCOPY
@@ -64,7 +64,7 @@ varcopy	equ	$
 ram	equ	$-32		;put ram on start of 256 byte page
 KEYBUF	equ	ram		;16 byte keyboard input fifo
 CTCVEC	equ	ram+16	;8 word interrupt vector table
-		INCLUDE global.mac
+		INCLUDE GLOBAL.MAC
 ;
 		.DEPHASE
 
