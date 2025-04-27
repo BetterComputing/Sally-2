@@ -43,9 +43,15 @@ HAS850:	LD	HL,DUMMY
 	SBC	HL,DE
 	JR	Z,MAIN		;JUMP IF 16K MEMORY SIZE MACHINE
 
+	IF SALLYBUILD
 	LD	HL, 02200h	;was 0000h, now 0800h+26*256 track buffer = 2200h
-	LD	(PBASE),HL	;ELSE SETUP FOR 48K PRINTER BUFFER
+	LD	(PBASE),HL	;ELSE SETUP FOR 39.5K PRINTER BUFFER
 	LD	HL,09DFFH	;bfffh - 2200h = 9dffh	
+	ELSE
+	LD	HL,0
+	LD	(PBASE),HL	;ELSE SETUP FOR 48K PRINTER BUFFER
+	LD	HL,0BFFFH
+	ENDIF
 	LD	(PSIZE),HL
 
 MAIN:	CALL	SPOOLER		;KEEP BACKGROUND PRINTING GOING
@@ -399,17 +405,17 @@ DWRT3:	LD	A,(DE)
 	JR	NZ,DWRT5
 	INC	HL
 	INC	DE
-	djnz	DWRT3		;fall through last time with acc=0
+	djnz	dwrt3		;fall through last time with acc=0
 
 DWRT4:	CALL	SETSTAT		;DO STATUS SETTING STUFF
 	LD	A,E
 	JP	SENDCHAR	;SEND 'COMPLETE' OR 'ERROR' TO ATARI
 ;	ret
 ;
-DWRT5:	xor	a
-	call	SSTS4		;set hardware status=0 but set bad r/w
+dwrt5:	xor	a
+	call	ssts4		;set hardware status=0 but set bad r/w
 	ld	a,e
-	jp	SENDCHAR
+	jp	sendchar
 ;	ret
 ;
 ;
@@ -550,8 +556,8 @@ STR20:	LD	(DKIOCB+DSKTRK),A
 ;
 	LD	A,(IDBUF+3)	;GET SECTOR LENGTH BYTE FROM ID
 	call	getsize		;compute sector length in bytes
-	ld	(iy+SECLEN),b
-	ld	(iy+SECLEN+1),c	;store result in 'seclen' param slot
+	ld	(iy+seclen),b
+	ld	(iy+seclen+1),c	;store result in 'seclen' param slot
 	LD	A,(DKIOCB+DSKAUX)
 	RLCA
 	RLCA
@@ -568,9 +574,9 @@ STR20:	LD	(DKIOCB+DSKTRK),A
 ;
 STR25:	LD	A,40
 	LD	HL,18
-STR26:	cp	(iy+NTRKS)
-	jr	c,STR27		;skip if ntrks has been set > default
-	ld	(iy+NTRKS),a	;else set param to default value
+str26:	cp	(iy+ntrks)
+	jr	c,str27		;skip if ntrks has been set > default
+	ld	(iy+ntrks),a	;else set param to default value
 STR27:	LD	(IY+NSECS),H
 	LD	(IY+NSECS+1),L	;STORE SECTORS PER TRACK PARAM
 
@@ -739,9 +745,9 @@ SFMT3:	LDIR			;THEN COPY PARAMS TO 'FMTSTUFF'
 	AND	11000000B
 	JR	NZ,DINIT6	;ERROR IF NOT READY OR WRITE PROTECTED
 
-	ld	a,(iy+NSIDES)	;set for SS/DS init
+	ld	a,(iy+nsides)	;set for SS/DS init
 	ld	(sides),a
-	ld	a,(iy+NTRKS)	;set for number of tracks
+	ld	a,(iy+ntrks)	;set for number of tracks
 	ld	(tracks),a
 	PUSH	IY
 	CALL	FORMAT		;CALL FORMAT SUBROUTINE

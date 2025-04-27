@@ -168,7 +168,7 @@ ramfill:	LD		(DE), A
 			LD		D, A				;KEEP PATTERN IN D (d = 4fh)
 			LD		B, 5				;step 5 times
 stepinloop:
-			LD		A, STEPIN+MTRSTOP+STEPRATE		;4b: 4 = step-in, b = MTRSTOP+STEPRATE3
+			LD		A, STEPIN+NOWAITMTR+STEPRATE		;4b: 4 = step-in, b = NOWAITMTR+STEPRATE3
 			CALL    slyCMDOUT			;write A to FDC command and wait
 			DJNZ    stepinloop
 
@@ -177,7 +177,7 @@ outloop1:	LD		A, D				;select all drives
 			OUT     (LATCH), A
 			EX		(SP),HL				;Use this benign operation pair
 			EX		(SP),HL				;to wait 38 T-states
-			LD		A, STEPOUT+MTRSTOP+STEPRATE		;6b: 6 = step-out, b = MTRSTOP+STEPRATE3
+			LD		A, STEPOUT+NOWAITMTR+STEPRATE		;6b: 6 = step-out, b = NOWAITMTR+STEPRATE3
 			CALL    slyCMDOUT			;write A to FDC command and wait
 
 			LD		E, DRVSEL1			;PREPARE TO TEST TK0 INDICATORS
