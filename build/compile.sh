@@ -3,6 +3,7 @@
 MODULE=sally2
 ASSEMBLER_PATH=zmac
 ASSEMBLER_EXE="${ASSEMBLER_PATH}/zmac.exe"
+ASM_EXTENSION=asm
 SOURCE_DIR=../src
 OUTPUT_DIR=../rel
 
@@ -17,7 +18,7 @@ fi
 
 compile_code()
 {
-  ${ASSEMBLER_EXE} --oo lst,hex,cim --od ${OUTPUT_DIR} ${SOURCE_DIR}/${1}.asm
+  ${ASSEMBLER_EXE} --oo lst,hex,cim --od ${OUTPUT_DIR} ${SOURCE_DIR}/${1}.${ASM_EXTENSION}
   mv ${OUTPUT_DIR}/${1}.cim ${OUTPUT_DIR}/${1}.com
 }
 
@@ -34,3 +35,6 @@ fi
 rm -f ${OUTPUT_DIR}/*
 compile_code ${MODULE}
 compile_code ddinit-0100
+# Build ATR 8000 ROM
+ASM_EXTENSION=MAC
+compile_code ROM

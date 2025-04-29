@@ -16,9 +16,7 @@ static unsigned char *mend;			/* pointer to current (just beyond) EOF*/
 static unsigned char *mptr;			/* pointer to current position */
 static unsigned int msize;			/* size of chunk mhead points to */
 
-FILE *
-mfopen(filename,mode)
-char *filename,*mode;
+FILE * mfopen(char *filename, char *mode)
 {
 	if ((mhead = malloc(MALLOC_SIZE)) == 0) {
 		msize = 0;
@@ -29,9 +27,7 @@ char *filename,*mode;
 	return ((FILE *)1);				/* not used */
 }
 
-int
-mfclose(f)
-FILE *f;
+int mfclose(FILE *f)
 {
 	if (mhead) {
 		free(mhead);
@@ -41,10 +37,7 @@ FILE *f;
 		return (-1);
 }
 
-unsigned int
-mfputc(c,f)
-unsigned int c;
-FILE *f;
+unsigned int mfputc(unsigned int c, FILE *f)
 {
 register unsigned char *p;
 	while (mptr >= mhead + msize) {
@@ -63,9 +56,7 @@ register unsigned char *p;
 	return c;
 }
 
-unsigned int
-mfgetc(f)
-FILE *f;
+unsigned int mfgetc(FILE *f)
 {
 	if (mptr >= mend)		/* no characters left */
 		return (-1);
@@ -73,11 +64,7 @@ FILE *f;
 		return (*mptr++);
 }
 
-int
-mfseek(f,loc,origin)
-FILE *f;
-long loc;
-int origin;
+int mfseek(FILE *f, long loc, int origin)
 {
 	if (origin != 0) {
 		fputs("mseek() only implemented with 0 origin",stderr);
@@ -87,11 +74,7 @@ int origin;
 	return (0);
 }
 
-int
-mfread(ptr, size, nitems,f)
-char *ptr;
-unsigned int size, nitems;
-FILE *f;
+int mfread(char *ptr, unsigned int size, unsigned int nitems, FILE *f)
 {
 register unsigned int i = 0;
 	while (i < nitems) {
@@ -105,11 +88,7 @@ register unsigned int i = 0;
 	return (i);
 }
 
-int
-mfwrite(ptr, size, nitems, f)
-char *ptr;
-int size, nitems;
-FILE *f;
+int mfwrite(char *ptr, int size, int nitems, FILE *f)
 {
 register int i = 0;
 register unsigned char *p;
