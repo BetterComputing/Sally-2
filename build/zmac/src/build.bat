@@ -3,7 +3,7 @@ setlocal
 
 rem ****************************************************
 rem ****************************************************
-set MSYS2_SHELL=C:\msys65\msys2_shell.cmd
+set MSYS2_SHELL=C:\msys64\msys2_shell.cmd
 
 rem ****************************************************
 rem * Look for cmd file. If not found, print out instructions

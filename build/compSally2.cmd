@@ -43,8 +43,7 @@ rem * Compile subroutine
 rem ****************************************************
 :compile
 ECHO *** compile %1
-%ASSEMBLER_EXE% --oo lst,hex,cim --od %OUTPUT_DIR% %SOURCE_DIR%\%1.
-%ASM_EXTENSION%
+%ASSEMBLER_EXE% --oo lst,hex,cim --od %OUTPUT_DIR% %SOURCE_DIR%\%1.%ASM_EXTENSION%
 if %ERRORLEVEL%==0 ren %OUTPUT_DIR%\%1.cim %1.com
 EXIT /B
 
